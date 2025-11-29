@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "lesson085@gmail.com",
+                "Name": "Lily Vex"
+            }
+        ],
+        "Category": "Windows and Tasks",
+        "Description": "Customizeable and modular task manager",
+        "Icon": "emblem-question",
+        "Id": "lilyvex.neotasks",
+        "Name": "Neotasks",
+        "Version": "0.1.0",
+        "Website": "https://github.com/lilyvex/neotasks",
+        "BugReportUrl": "https://github.com/lilyvex/neotasks/issues"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure": "Plasma/Applet"
+}
