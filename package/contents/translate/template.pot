@@ -1,0 +1,42 @@
+# Translation of neotasks in LANGUAGE
+# Copyright (C) 2025
+# This file is distributed under the same license as the neotasks package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: neotasks\n"
+"Report-Msgid-Bugs-To: https://github.com/lilyvex/neotasks\n"
+"POT-Creation-Date: 2025-11-29 17:46-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../config/config.qml
+msgid "General"
+msgstr ""
+
+#: ../ui/configuration/General.qml
+msgid "Section:"
+msgstr ""
+
+#: ../ui/configuration/General.qml
+msgid "Show label"
+msgstr ""
+
+#: ../ui/configuration/General.qml
+msgid "Show icon"
+msgstr ""
+
+#: ../ui/configuration/General.qml
+msgid "Label:"
+msgstr ""
+
+#: ../ui/configuration/General.qml
+msgid "Placeholder"
+msgstr ""

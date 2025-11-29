@@ -21,14 +21,20 @@ endif
 BUILD_ARTIFACT_NAME := neotasks-$(VERSION_STRING).tar.xz
 build:
 	$(info Building Plasmoid...)
+	sh package/contents/translate/build
 	tar -cf $(BUILD_ARTIFACT_NAME) package/
 	$(info Plasmoid built: $(VERSION_STRING): $(BUILD_ARTIFACT_NAME))
 
 clean_build: clean build
 
 clean:
+	-rm -rf package/contents/locale/ 2>/dev/null
 	-rm $(BUILD_ARTIFACT_NAME) 2>/dev/null
-	$(info Cleaned build artifact)
+	$(info Cleaned build artifacts)
+
+update_locales:
+	sh package/contents/translate/merge
+	$(info Updated locales)
 
 install:
 	$(info Installing Plasmoid...)
