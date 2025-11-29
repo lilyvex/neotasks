@@ -1,14 +1,13 @@
 VERSION_STRING := unknown
 DEV_BUILD := @true
-GIT_COMMIT_HASH := $(git rev-parse --short=7 HEAD)
-GIT_TAG := $(git rev-list --tags --max-count=1)
+GIT_COMMIT_HASH := $(shell git rev-parse --short=7 HEAD)
+GIT_TAG := $(shell git rev-list --tags --max-count=1)
+GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
-ifneq ($(filter fatal:%,$(GIT_COMMIT_HASH)),)
-	ifneq (GIT_TAG,"")
-		VERSION_STRING = $(GIT_TAG).$(GIT_COMMIT_HASH)
-	else
-		VERSION_STRING = dev.$(GIT_COMMIT_HASH)
-	endif
+ifneq ($(GIT_TAG),)
+	VERSION_STRING = $(GIT_TAG).$(GIT_COMMIT_HASH)
+else
+	VERSION_STRING = $(GIT_BRANCH).$(GIT_COMMIT_HASH)
 endif
 
 ifeq ($(DEV_BUILD),@true)
