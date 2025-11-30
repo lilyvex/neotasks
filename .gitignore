@@ -1,7 +1,14 @@
 .DS_Store
 .idea
-*.log
+.cache
 tmp/
 
 # Ignore build artifacts
 *.tar.xz
+
+# Ignore generated locale binary files
+package/contents/locale/
+
+# Ignore intermediate build files
+package/contents/translate/template.pot.new
+package/contents/translate/infiles.list
