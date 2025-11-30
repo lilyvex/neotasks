@@ -27,6 +27,15 @@ make build && make install
 *There are currently no releases.* This section will be updated when the first release
 is created.
 
+** Development Workflow
+Follow [[#building--installing-from-source][Building / Installing from Source]]
+
+You can uninstall the Plasmoid via:
+
+#+begin_src sh
+make uninstall
+#+end_src
+
 ** Internationalization / Translators (i18n)
 See [[package/contents/translate/README.org]]
 
