@@ -12,6 +12,7 @@
         "Id": "lilyvex.neotasks",
         "Name": "Neotasks",
         "Version": "0.1.0",
+        "License": "GPL-3.0-only",
         "Website": "https://github.com/lilyvex/neotasks",
         "BugReportUrl": "https://github.com/lilyvex/neotasks/issues"
     },
