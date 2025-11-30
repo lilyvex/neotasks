@@ -1,4 +1,4 @@
-#+html:<h1 align="center"><img src="assets/icon-nopad.png" width="50px" height="50px" alt="Neotasks Icon"/>Neotasks</h1>
+#+html:<h1 align="center"><img src="assets/icon-nopad.png" width="40px" height="40px" alt="Neotasks Icon"/> Neotasks</h1>
 #+html:<p align="center">A Customizable and Modular Task Manager Plasmoid for KDE Plasma 6.x</p>
 
 #+html:<div align="center">
