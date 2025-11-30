@@ -1,10 +1,9 @@
-#+html:<h1 align="center"><img src="assets/icon.png" alt="Neotasks Icon"/>Neotasks</h1>
+#+html:<h1 align="center"><img src="assets/icon-nopad.png" width="50px" height="50px" alt="Neotasks Icon"/>Neotasks</h1>
 #+html:<p align="center">A Customizable and Modular Task Manager Plasmoid for KDE Plasma 6.x</p>
 
 #+html:<div align="center">
 #+html:<img src="https://img.shields.io/badge/Qt-%23217346.svg?style=for-the-badge&logo=Qt&logoColor=white" alt="Qt"/>
 #+html:<img src="https://img.shields.io/badge/orgmode-%2377AA99.svg?style=for-the-badge&logo=org&logoColor=white" alt="Org-mode"/>
-#+html:<img src="https://img.shields.io/github/license/lilyvex/neotasks?style=for-the-badge" alt="License"/>
 #+html:<br/>
 #+html:<br/>
 
