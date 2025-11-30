@@ -1,0 +1,52 @@
+#+html:<h1 align="center"><img src="assets/icon.png" alt="Neotasks Icon"/>Neotasks</h1>
+#+html:<p align="center">A Customizable and Modular Task Manager Plasmoid for KDE Plasma 6.x</p>
+
+#+html:<div align="center">
+#+html:<img src="https://img.shields.io/badge/Qt-%23217346.svg?style=for-the-badge&logo=Qt&logoColor=white" alt="Qt"/>
+#+html:<img src="https://img.shields.io/badge/orgmode-%2377AA99.svg?style=for-the-badge&logo=org&logoColor=white" alt="Org-mode"/>
+#+html:<img src="https://img.shields.io/github/license/lilyvex/neotasks?style=for-the-badge" alt="License"/>
+#+html:<br/>
+#+html:<br/>
+
+| Icon-only mode              | Icon-and-label mode              |
+|-----------------------------+----------------------------------|
+| [[./assets/icon_only_mode.png]] | [[./assets/icon_and_label_mode.png]] |
+
+/Images pending/
+#+HTML:</div>
+** Usage
+*To be written*
+
+** Building / Installing from Source
+Ensure you have =gettext= installed from your distribution's package manager. Then run:
+
+#+begin_src sh
+make build && make install
+#+end_src
+
+** Installing from a Release
+*There are currently no releases.* This section will be updated when the first release
+is created.
+
+** Contributing
+Contributions are always welcome, regardless of skill level, but there are a few basic
+requirements to ensure that they get merged.
+
+- Ensure that pull-requests (PRs) have a managable scope
+   - Formatting PRs are exempt from this
+- Use [[https://www.conventionalcommits.org/en/v1.0.0/#summary][conventional commits]]
+   - For more complex changes, provide a brief description within your commit
+- Be available to respond to questions or concerns about your changes
+   - And be willing to make changes to your PR
+- GPG sign your commits (optional)
+- Follow the [[https://www.contributor-covenant.org/version/3/0/code_of_conduct/][code of conduct]]
+- Ensure that all commits can at least successfully load the Plasmoid
+
+*** Steps to contribute
+1. [[https://github.com/lilyvex/neotasks/fork][Fork]] this repository
+1. Create a new branch
+1. Make and test your changes
+1. Create a [[https://github.com/lilyvex/neotasks/compare][pull-request]]
+1. Wait for possible feedback or merge
+1. If any feedback is provided, discuss changes and then make them
+1. Repeat the previous two steps until your changes are merged
