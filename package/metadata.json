@@ -7,8 +7,8 @@
             }
         ],
         "Category": "Windows and Tasks",
-        "Description": "Customizeable and modular task manager",
-        "Icon": "emblem-question",
+        "Description": "Customizeable and Modular Task Manager",
+        "Icon": "neotasks.png",
         "Id": "lilyvex.neotasks",
         "Name": "Neotasks",
         "Version": "0.1.0",
