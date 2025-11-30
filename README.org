@@ -28,7 +28,7 @@ make build && make install
 is created.
 
 ** Internationalization / Translators (i18n)
-See [[package/contents/translate/README.md]]
+See [[package/contents/translate/README.org]]
 
 ** Contributing
 Contributions are always welcome, regardless of skill level, but there are a few basic

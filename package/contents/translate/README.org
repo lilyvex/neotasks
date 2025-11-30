@@ -1,0 +1,28 @@
+** Adding translations
+Fill out =[[template.pot]]= with your translations then open a [https://github.com/lilyvex/neotasks/issues/new][new issue],
+name the file with the extension =.txt=, attach the txt file to the issue (drag and drop).
+
+Or if you know how to make a pull request:
+
+Copy the =[[template.pot]]= file to =[[./po]]= directory and name it your locale's code (Eg: =en= / =de= / =fr=) with the
+extension =.po=. Then fill out all of the =msgstr ""=.
+
+** Tooling
+Ensure all tools are run from the root of the repository.
+
+- =make update_locales= will parse the =i18n()= calls in the =*.qml= files and write it to the =template.pot= file.
+  Then it will merge any changes into the =*.po= language files.
+
+- =make build= will build the Plasmoid including the locale files, this is done by converting the =*.po= files to their binary =*.mo= version
+  and moving them to =contents/locale/...=
+
+*These scripts are heavily modified versions of Zren's i18n scripts.* You can find the original scripts here:
+
+[[https://github.com/Zren/plasma-applet-lib/tree/master/package/translate]]
+
+** Status
+
+|  Locale  |  Lines  | % Done|
+|----------+---------+-------|
+| Template |       6 |       |
+| test     |     0/6 |    0% |
