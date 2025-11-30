@@ -27,6 +27,9 @@ make build && make install
 *There are currently no releases.* This section will be updated when the first release
 is created.
 
+** Internationalization / Translators (i18n)
+See [[package/contents/translate/README.md]]
+
 ** Contributing
 Contributions are always welcome, regardless of skill level, but there are a few basic
 requirements to ensure that they get merged.

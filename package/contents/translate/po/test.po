@@ -1,23 +1,23 @@
-#: ../config/config.qml
+#: package/contents/config/config.qml
 msgid "General"
 msgstr ""
 
-#: ../ui/configuration/General.qml
+#: package/contents/ui/configuration/General.qml
 msgid "Section:"
 msgstr ""
 
-#: ../ui/configuration/General.qml
+#: package/contents/ui/configuration/General.qml
 msgid "Show label"
 msgstr ""
 
-#: ../ui/configuration/General.qml
+#: package/contents/ui/configuration/General.qml
 msgid "Show icon"
 msgstr ""
 
-#: ../ui/configuration/General.qml
+#: package/contents/ui/configuration/General.qml
 msgid "Label:"
 msgstr ""
 
-#: ../ui/configuration/General.qml
+#: package/contents/ui/configuration/General.qml
 msgid "Placeholder"
 msgstr ""

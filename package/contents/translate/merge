@@ -10,7 +10,8 @@ plasmoidName=lilyvex.neotasks
 widgetName="${plasmoidName##*.}" # Strip namespace
 website=https://github.com/lilyvex/neotasks
 bugAddress="$website"
-packageRoot=".." # Root of translatable sources
+packageRoot="." # Root of translatable sources
+translateRoot="package/contents/translate"
 projectName="plasma_applet_${plasmoidName}" # project name
 
 #---
@@ -59,23 +60,23 @@ xgettext \
 	--msgid-bugs-address="${bugAddress}" \
 	-D "${packageRoot}" \
 	-D "${DIR}" \
-	-o "template.pot.new" \
+	-o "$translateRoot/template.pot.new" \
 	|| \
 	{ echo "[merge] error while calling xgettext. aborting."; exit 1; }
 
-sed -i 's/"Content-Type: text\/plain; charset=CHARSET\\n"/"Content-Type: text\/plain; charset=UTF-8\\n"/' "template.pot.new"
-sed -i 's/# SOME DESCRIPTIVE TITLE./'"# Translation of ${widgetName} in LANGUAGE"'/' "template.pot.new"
-sed -i 's/# Copyright (C) YEAR THE PACKAGE'"'"'S COPYRIGHT HOLDER/'"# Copyright (C) $(date +%Y)"'/' "template.pot.new"
+sed -i 's/"Content-Type: text\/plain; charset=CHARSET\\n"/"Content-Type: text\/plain; charset=UTF-8\\n"/' "$translateRoot/template.pot.new"
+sed -i 's/# SOME DESCRIPTIVE TITLE./'"# Translation of ${widgetName} in LANGUAGE"'/' "$translateRoot/template.pot.new"
+sed -i 's/# Copyright (C) YEAR THE PACKAGE'"'"'S COPYRIGHT HOLDER/'"# Copyright (C) $(date +%Y)"'/' "$translateRoot/template.pot.new"
 
-if [ -f "template.pot" ]; then
+if [ -f "$translateRoot/template.pot" ]; then
 	newPotDate=`grep "POT-Creation-Date:" template.pot.new | sed 's/.\{3\}$//'`
 	oldPotDate=`grep "POT-Creation-Date:" template.pot | sed 's/.\{3\}$//'`
-	sed -i 's/'"${newPotDate}"'/'"${oldPotDate}"'/' "template.pot.new"
-	changes=`diff "template.pot" "template.pot.new"`
+	sed -i 's/'"${newPotDate}"'/'"${oldPotDate}"'/' "$translateRoot/template.pot.new"
+	changes=`diff "$translateRoot/template.pot" "$translateRoot/template.pot.new"`
 	if [ ! -z "$changes" ]; then
 		# There's been changes
-		sed -i 's/'"${oldPotDate}"'/'"${newPotDate}"'/' "template.pot.new"
-		mv "template.pot.new" "template.pot"
+		sed -i 's/'"${oldPotDate}"'/'"${newPotDate}"'/' "$translateRoot/template.pot.new"
+		mv "$translateRoot/template.pot.new" "$translateRoot/template.pot"
 
 		addedKeys=`echo "$changes" | grep "> msgid" | cut -c 9- | sort`
 		removedKeys=`echo "$changes" | grep "< msgid" | cut -c 9- | sort`
@@ -89,14 +90,14 @@ if [ -f "template.pot" ]; then
 
 	else
 		# No changes
-		rm "template.pot.new"
+		rm "$translateRoot/template.pot.new"
 	fi
 else
 	# template.pot didn't already exist
-	mv "template.pot.new" "template.pot"
+	mv "$translateRoot/template.pot.new" "$translateRoot/template.pot"
 fi
 
-potMessageCount=`expr $(grep -Pzo 'msgstr ""\n(\n|$)' "template.pot" | grep -c 'msgstr ""')`
+potMessageCount=`expr $(grep -Pzo 'msgstr ""\n(\n|$)' "$translateRoot/template.pot" | grep -c 'msgstr ""')`
 echo "|  Locale  |  Lines  | % Done|" > "./Status.md"
 echo "|----------|---------|-------|" >> "./Status.md"
 entryFormat="| %-8s | %7s | %5s |"
@@ -108,7 +109,7 @@ echo "[merge] Done extracting messages"
 
 #---
 echo "[merge] Merging messages"
-catalogs=`find ./po -name '*.po' | sort`
+catalogs=`find $translateRoot/po -name '*.po' | sort`
 for cat in $catalogs; do
 	echo "[merge] $cat"
 	catLocale=`basename ${cat%.*}`
@@ -156,14 +157,14 @@ done
 echo "[merge] Done merging messages"
 
 #---
-# Populate ReadMe.md
-echo "[merge] Updating translate/ReadMe.md"
-sed -i -E 's`share\/plasma\/plasmoids\/(.+)\/translate`share/plasma/plasmoids/'"${plasmoidName}"'/translate`' ./ReadMe.md
+# Populate README.md
+echo "[merge] Updating translate/README.md"
+sed -i -E 's`share\/plasma\/plasmoids\/(.+)\/translate`share/plasma/plasmoids/'"${plasmoidName}"'/translate`' ./$translateRoot/README.md
 if [[ "$website" == *"github.com"* ]]; then
-	sed -i -E 's`\[new issue\]\(https:\/\/github\.com\/(.+)\/(.+)\/issues\/new\)`[new issue]('"${website}"'/issues/new)`' ./ReadMe.md
+	sed -i -E 's`\[new issue\]\(https:\/\/github\.com\/(.+)\/(.+)\/issues\/new\)`[new issue]('"${website}"'/issues/new)`' ./$translateRoot/README.md
 fi
-sed -i '/^|/ d' ./ReadMe.md # Remove status table from ReadMe
-cat ./Status.md >> ./ReadMe.md
+sed -i '/^|/ d' ./$translateRoot/README.md # Remove status table from README
+cat ./Status.md >> ./$translateRoot/README.md
 rm ./Status.md
 
 echo "[merge] Done"
