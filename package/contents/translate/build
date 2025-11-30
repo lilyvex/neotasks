@@ -33,7 +33,7 @@ fi
 #---
 echo "[build] Compiling messages"
 
-catalogs=`find ./po -name '*.po' | sort`
+catalogs=`find ./package/contents/translate/po -name '*.po' | sort`
 for cat in $catalogs; do
 	catLocale=`basename ${cat%.*}`
 	msgfmt -o "${catLocale}.mo" "$cat"

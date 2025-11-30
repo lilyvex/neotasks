@@ -36,12 +36,12 @@ update_locales:
 	sh package/contents/translate/merge
 	$(info Updated locales)
 
-install:
+install: build
 	$(info Installing Plasmoid...)
-	kpackagetool6 -i $(BUILD_ARTIFACT_NAME)
+	kpackagetool6 -t Plasma/Applet -i $(BUILD_ARTIFACT_NAME)
 	$(info Plasmoid installed)
 
 uninstall:
 	$(info Uninstalling Plasmoid...)
-	kpackagetool6 -r lilyvex.neotasks
+	kpackagetool6 -t Plasma/Applet -r lilyvex.neotasks
 	$(info Plasmoid uninstalled)
