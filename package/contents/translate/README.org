@@ -1,10 +1,10 @@
 ** Adding translations
-Fill out [[template.pot][=template.pot=]] with your translations then open a [https://github.com/lilyvex/neotasks/issues/new][new issue],
+Fill out [[template.pot][template.pot]] with your translations then open a [[https://github.com/lilyvex/neotasks/issues/new][new issue]],
 name the file with the extension =.txt=, attach the txt file to the issue (drag and drop).
 
 Or if you know how to make a pull request:
 
-Copy the [[template.pot][=template.pot=]] file to [[./po][=./po=]] directory and name it your locale's code (Eg: =en= / =de= / =fr=) with the
+Copy the [[template.pot][template.pot]] file to [[./po][./po]] directory and name it your locale's code (Eg: =en= / =de= / =fr=) with the
 extension =.po=. Then fill out all of the =msgstr ""=.
 
 ** Tooling
