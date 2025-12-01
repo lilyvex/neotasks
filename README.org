@@ -11,7 +11,6 @@
 |-----------------------------+----------------------------------|
 | [[./assets/icon_only_mode.png]] | [[./assets/icon_and_label_mode.png]] |
 
-/Images pending/
 #+HTML:</div>
 ** Usage
 *To be written*
