@@ -16,7 +16,8 @@
 *To be written*
 
 ** Building / Installing from Source
-Ensure you have =gettext= installed from your distribution's package manager. Then run:
+Ensure you have =gettext= installed from your distribution's package manager and =gitpython= from =pip=, =uv=,
+or your distributions package manager. Then run:
 
 #+begin_src sh
 make build && make install
