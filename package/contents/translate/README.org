@@ -8,7 +8,7 @@ Copy the [[template.pot][template.pot]] file to [[./po][./po]] directory and nam
 extension =.po=. Then fill out all of the =msgstr ""=.
 
 ** Tooling
-Ensure all tools are run from the root of the repository.
+Ensure dependencies have been installed from your distrobution's package manager or =pip= / =uv=. They can be found [[requirements.txt][here]].
 
 - =make update_locales= will parse the =i18n()= calls in the =*.qml= files and write it to the =template.pot= file.
   Then it will merge any changes into the =*.po= language files.
@@ -16,13 +16,11 @@ Ensure all tools are run from the root of the repository.
 - =make build= will build the Plasmoid including the locale files, this is done by converting the =*.po= files to their binary =*.mo= version
   and moving them to =contents/locale/...=
 
-*These scripts are heavily modified versions of Zren's i18n scripts.* You can find the original scripts here:
-
-[[https://github.com/Zren/plasma-applet-lib/tree/master/package/translate]]
+- =make clean= will remove produced build artifacts
 
 ** Status
 
-|  Locale  |  Lines  | % Done|
-|----------+---------+-------|
-| Template |       6 |       |
-| test     |     0/6 |    0% |
+|  Locale  |  Lines  | % Done |
+|----------+---------+--------|
+| Template |     138 |      |
+| test     |   0/138 |    0% |

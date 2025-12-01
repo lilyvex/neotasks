@@ -1,0 +1,642 @@
+#!/usr/bin/env python
+
+# SPDX-FileCopyright-Text: 2025 Lily Vex
+# SPDX-License-Identifier: GPL-3.0-only
+
+# Lily's GNU gettext i18n script (KDE Plasma Plasmoid adapation)
+#
+# Version: 1
+#
+# I wrote this script due to my pure frustration of working with
+# outdated and janky tooling. Feel free to include this in other
+# projects, just remember to retain the SPDX tags.
+#
+# Dependencies
+# - Python >= 3
+# - GitPython
+# - Git
+# - GNU gettext
+#
+# Features
+# - Orgmode translation progess summary generation
+# - TOML configuration format
+# - Ease of use
+
+# TODO: Add documentation comments
+
+import argparse
+import logging
+import tomllib
+import json
+import os
+import sys
+import git
+import subprocess
+import re
+import glob
+import difflib
+
+from datetime import datetime
+
+class ColorFormatter(logging.Formatter):
+    COLORS = {
+        'DEBUG':    '\033[36m', # Cyan
+        'INFO':     '\033[32m', # Green
+        'WARNING':  '\033[33m', # Yellow
+        'ERROR':    '\033[31m', # Red
+        'CRITICAL': '\033[35m', # Magenta
+    }
+
+    RESET = '\033[0m'
+
+    def format(self, record):
+        log_color = self.COLORS.get(record.levelname, self.RESET)
+        record.levelname = f"{log_color}{record.levelname}{self.RESET}"
+        return super().format(record)
+
+g_loggingHandler = logging.StreamHandler()
+g_loggingHandler.setFormatter(ColorFormatter('%(levelname)s: [%(funcName)s]: %(message)s'))
+
+g_logger      = logging.getLogger(__name__)
+g_logger.addHandler(g_loggingHandler)
+g_logger.setLevel(logging.INFO)
+
+g_argParser   = argparse.ArgumentParser(description='GNU gettext Locale File Manager and Builder')
+g_subParsers  = g_argParser.add_subparsers(dest='command', help='Available commands')
+
+g_mergeParser = g_subParsers.add_parser('merge', help='Merge `template.pot` changes into `.po` files and update status')
+g_buildParser = g_subParsers.add_parser('build', help='Build `.po` into their binary `.mo` counterpart and place them in `contents/locale`')
+g_cleanParser = g_subParsers.add_parser('clean', help='Clean build artifacts')
+
+g_argParser.add_argument('-v', '--verbose', action='store_true', help='Show debug output')
+g_argParser.add_argument('-c', '--config', help='Path to the config file')
+
+g_args = g_argParser.parse_args()
+
+if g_args.verbose:
+    g_logger.setLevel(logging.DEBUG)
+
+class LocalezConfig:
+    def find_repo_root(self):
+        try:
+            repo = git.Repo(os.getcwd(), search_parent_directories=True)
+            return repo.working_dir
+        except Exception as e:
+            g_logger.critical(f"Could not find Git repository root, cannot continue: {e}")
+            sys.exit(2)
+
+    def parse(self):
+        try:
+            if g_args.config:
+                with open(g_args.config, 'rb') as f:
+                    config = tomllib.load(f)
+            else:
+                with open(os.path.join(os.getcwd(), 'localezconfig.toml'), 'rb') as f:
+                        config = tomllib.load(f)
+        except Exception as e:
+            g_logger.critical(f"Could not read config file, cannot proceed: {e}")
+            sys.exit(1)
+
+        if 'repositoryroot' not in config:
+            config['repositoryroot'] = self.find_repo_root()
+        elif config['repositoryroot'] == "":
+            config['repositoryroot'] = self.find_repo_root()
+
+        if 'plasmoid' not in config:
+            g_logger.error("This script only supports Plasmoid i18n, please create a `plasmoid` section with a `packageroot` field in `localezconfig.toml`")
+            sys.exit(3)
+
+        if 'packageroot' not in config['plasmoid']:
+            g_logger.error("This script only supports Plasmoid i18n, please provide a `packageroot` in `localezconfig.toml`")
+            sys.exit(4)
+
+        if config['plasmoid']['packageroot'] == "":
+                g_logger.error("This script only supports Plasmoid i18n, please provide a `packageroot` in `localezconfig.toml`")
+                sys.exit(5)
+        elif not os.path.exists(os.path.join(config['repositoryroot'], config['plasmoid']['packageroot'])):
+                g_logger.error("Plasmoid `packageroot` could not be found from provided path, please edit `localezconfig.toml`")
+                sys.exit(6)
+
+        config['plasmoid']['packageroot'] = config['plasmoid']['packageroot'].lstrip('/')
+
+        return config
+
+class Localez:
+    config = LocalezConfig().parse()
+    packageRoot = os.path.join(config['repositoryroot'], config['plasmoid']['packageroot'])
+    contents = os.path.join(packageRoot, 'contents')
+    translate = os.path.join(contents, 'translate')
+
+    def confirmation_prompt(func=str, message=str, options=['y','n'], default='y'):
+        if default not in options:
+            g_logger.debug(f"Default `{default}` is not in options")
+            g_logger.error("Internal error")
+            sys.exit(7)
+
+        options[default] = options[default].upper()
+        options_string = ""
+
+        for idx, opt in enumerate(options):
+            options_string += opt
+
+            if idx <= len(options) - 1:
+                options_string += '/'
+
+        prompt = input(f"[{func}] {message} [{options_string}]:")
+
+        if prompt in options.lower() or prompt in options.upper():
+            return prompt
+        else:
+            g_logger.error("Enter a valid option")
+            confirmation_prompt(func, message, options, default)
+
+    def print_files(self, type_name=str, type_array=[str]):
+        g_logger.info(f"{type_name} files:")
+
+        if type_array:
+            for f in type_array:
+                g_logger.info(f"- {f[f.find('package'):]}")
+        else:
+            g_logger.info('- No files')
+
+        g_logger.info('')
+
+    def build(self):
+        g_logger.info("Building locales...")
+
+        po_dir = os.path.join(self.translate, 'po')
+        catalogs = sorted(glob.glob(os.path.join(po_dir, '*.po')))
+
+        for cat in catalogs:
+            cat_locale = cat.split('.')[0]
+
+            mo_file = f"{cat_locale}.mo"
+            msgfmt = subprocess.run([
+                "msgfmt",
+                "-o",
+                mo_file,
+                str(cat)
+            ], stdout=sys.stdout, stderr=subprocess.DEVNULL)
+
+            if msgfmt.returncode != 0:
+                g_logger.critical('Failed to generate `.mo` files')
+                sys.exit(11)
+
+
+            metadata = os.path.join(self.packageRoot, 'metadata.json')
+            plasmoid_name = ""
+
+            if not os.path.exists(metadata):
+                g_logger.critical('Plasmoid package `metadata.json` not found, cannot continue')
+                sys.exit(8)
+
+            with open(metadata, 'rb') as f:
+                metadata_json = json.load(f)
+
+                if 'KPlugin' not in metadata_json:
+                    g_logger.critical('Invalid `metadata.json` format, see: https://develop.kde.org/docs/plasma/widget/setup/#metadatajson')
+                    sys.exit(9)
+
+                if 'Id' not in metadata_json['KPlugin']:
+                    g_logger.critical('`Id` field is not present in `metadata.json`')
+                    sys.exit(9)
+
+                if 'BugReportUrl' not in metadata_json['KPlugin']:
+                    g_logger.critical('`BugReportUrl` field is not present in `metadata.json`')
+                    sys.exit(9)
+
+                plasmoid_name = metadata_json['KPlugin']['Id'].split('.')[-1]
+
+            install_path = os.path.join(self.contents, 'locale', cat_locale.split('/')[-1], 'LC_MESSAGES', f"{plasmoid_name}.mo")
+
+            try:
+                os.mkdir(os.path.join(self.contents, 'locale'))
+            except Exception as e:
+                pass
+
+            os.makedirs(os.path.dirname(install_path), exist_ok=True)
+
+            try:
+                os.rename(mo_file, install_path)
+                g_logger.debug(f"Installed `{cat}` to `{install_path}`")
+            except Exception as e:
+                if type(e) != FileNotFoundError:
+                    g_logger.error(f"`.mo` not found for `{cat_locale.split('/')[-1]}`")
+                pass
+
+        g_logger.info("Done building messages")
+
+    def merge(self):
+        g_logger.info("Extracting messages")
+
+        file_exts = ['.c', '.cpp', '.h', '.qml', '.js']
+        files = []
+
+        for root, _, filenames in os.walk(self.contents):
+            for f in filenames:
+                ext = os.path.splitext(f)[1]
+
+                if ext == "":
+                    continue
+
+                if ext in file_exts:
+                    full_path = os.path.join(root, f)
+                    files.append(full_path)
+
+        qml_f = []
+        c_f   = []
+        cpp_f = []
+        h_f   = []
+        js_f  = []
+        for f in files:
+            ext = os.path.splitext(f)[1]
+
+            if ext == '.c':
+                c_f.append(f)
+
+            if ext == '.cpp':
+                cpp_f.append(f)
+
+            if ext == '.qml':
+                qml_f.append(f)
+
+            if ext == '.js':
+                js_f.append(f)
+
+            if ext == '.h':
+                h_f.append(f)
+
+        g_logger.info('Found the following source files:')
+        g_logger.info('')
+
+        with open(os.path.join(self.translate, 'infiles.list'), 'w') as f:
+            for in_file in files:
+                f.write(in_file + '\n')
+
+        self.print_files("QML", qml_f)
+        self.print_files("C", c_f)
+        self.print_files("H", h_f)
+        self.print_files("CPP", cpp_f)
+        self.print_files("JS", js_f)
+
+        metadata = os.path.join(self.packageRoot, 'metadata.json')
+
+        plasmoid_name = ""
+        plasmoid_bugreporturl = ""
+
+        if not os.path.exists(metadata):
+            g_logger.critical('Plasmoid package `metadata.json` not found, cannot continue')
+            sys.exit(8)
+
+        with open(metadata, 'rb') as f:
+            metadata_json = json.load(f)
+
+            if 'KPlugin' not in metadata_json:
+                g_logger.critical('Invalid `metadata.json` format, see: https://develop.kde.org/docs/plasma/widget/setup/#metadatajson')
+                sys.exit(9)
+
+            if 'Id' not in metadata_json['KPlugin']:
+                g_logger.critical('`Id` field is not present in `metadata.json`')
+                sys.exit(9)
+
+            if 'BugReportUrl' not in metadata_json['KPlugin']:
+                g_logger.critical('`BugReportUrl` field is not present in `metadata.json`')
+                sys.exit(9)
+
+            plasmoid_name = metadata_json['KPlugin']['Id'].split('.')[-1]
+            plasmoid_bugreporturl = metadata_json['KPlugin']['BugReportUrl']
+
+        g_logger.info("Executing `xgettext`")
+
+        xgettext = subprocess.run([
+            "xgettext",
+            "--from-code=UTF-8",
+            "--width=200",
+            "--add-location=file",
+            f"--files-from={os.path.join(self.translate, 'infiles.list')}",
+            "-C",
+            "-kde",
+            "-ci18n",
+            "-ki18n:1",
+            "-ki18nc:1c,2",
+            "-ki18np:1,2",
+            "-ki18ncp:1c,2,3",
+            "-kki18n:1",
+            "-kki18nc:1c,2",
+            "-kki18np:1,2",
+            "-kki18ncp:1c,2,3",
+            "-kxi18n:1",
+            "-kxi18nc:1c,2",
+            "-kxi18np:1,2",
+            "-kxi18ncp:1c,2,3",
+            "-kkxi18n:1",
+            "-kkxi18nc:1c,2",
+            "-kkxi18np:1,2",
+            "-kkxi18ncp:1c,2,3",
+            "-kI18N_NOOP:1",
+            "-kI18NC_NOOP:1c,2",
+            "-kI18N_NOOP2:1c,2",
+            "-kI18N_NOOP2_NOSTRIP:1c,2",
+            "-ktr2i18n:1",
+            "-ktr2xi18n:1",
+            "-kN_:1",
+            "-kaliasLocale",
+            f"--package-name={plasmoid_name}",
+            f"--msgid-bugs-address={plasmoid_bugreporturl}",
+            "-D", self.packageRoot,
+            "-D", self.config['repositoryroot'],
+            "-o", os.path.join(self.translate, 'template.pot.new')
+        ], stdout=sys.stdout, stderr=sys.stderr)
+
+        try:
+            os.remove(os.path.join(self.translate, 'infiles.list'))
+        except Exception as e:
+            pass
+
+        if xgettext.returncode != 0:
+            g_logger.critical('Could not generate `template.pot.new` file')
+            sys.exit(10)
+
+        g_logger.info('Generated `template.pot.new`, diffing')
+
+        template_pot_new = os.path.join(self.translate, 'template.pot.new')
+        template_pot = os.path.join(self.translate, 'template.pot')
+
+        with open(template_pot_new, 'r', encoding='utf-8') as f:
+            template_pot_new_content = f.read()
+
+        template_pot_new_content = re.sub(
+            r'"Template_Pot_New_Content-Type: text/plain; charset=CHARSET\\n"',
+            r'"Template_Pot_New_Content-Type: text/plain; charset=UTF-8\\n"',
+            template_pot_new_content
+        )
+
+        template_pot_new_content = re.sub(
+            r'# SOME DESCRIPTIVE TITLE\.',
+            f'# Translation of {plasmoid_name} in LANGUAGE',
+            template_pot_new_content
+        )
+
+        template_pot_new_content = re.sub(
+            r"# Copyright \(C\) YEAR THE PACKAGE'S COPYRIGHT HOLDER",
+            f'# Copyright (C) {datetime.now().year}',
+            template_pot_new_content
+        )
+
+        with open(template_pot_new, 'w', encoding='utf-8') as f:
+            f.write(template_pot_new_content)
+
+        if os.path.exists(template_pot):
+            with open(template_pot, 'r', encoding='utf-8') as f:
+                old_lines = f.readlines()
+
+            with open(template_pot_new, 'r', encoding='utf-8') as f:
+                new_lines = f.readlines()
+
+            old_date_line = next((line for line in old_lines if '"POT-Creation-Date:' in line), None)
+            if old_date_line:
+                for i, line in enumerate(new_lines):
+                    if '"POT-Creation-Date:' in line:
+                        new_lines[i] = old_date_line
+                        break
+
+            differ = difflib.Differ()
+            diff = list(differ.compare(old_lines, new_lines))
+
+            changes = [line for line in diff if line.startswith('+ ') or line.startswith('- ')]
+
+            if changes:
+                with open(template_pot_new, 'r', encoding='utf-8') as f:
+                    new_content = f.read()
+
+                os.rename(template_pot_new, template_pot)
+
+                added_keys = sorted(set(
+                    line[9:].strip() for line in diff
+                    if line.startswith('+ ') and 'msgid' in line
+                ))
+                removed_keys = sorted(set(
+                    line[9:].strip() for line in diff
+                    if line.startswith('- ') and 'msgid' in line
+                ))
+
+                g_logger.info("")
+                g_logger.info("Added Keys:")
+                for key in added_keys:
+                    g_logger.info(f"  {key[:-1]}")
+
+                g_logger.info("")
+                g_logger.info("Removed Keys:")
+                for key in removed_keys:
+                    g_logger.info(f"  {key[:-1]}")
+
+                g_logger.info("")
+            else:
+                os.remove(template_pot_new)
+                g_logger.info("No changes detected in `template.pot`")
+        else:
+            os.rename(template_pot_new, template_pot)
+            g_logger.info("Created new `template.pot`")
+
+        pot_message_count = 0
+        with open(template_pot, 'r', encoding='utf-8') as f:
+            content = f.read()
+            matches = re.findall(r'msgstr ""\n(?:\n|$)', content)
+            pot_message_count = len(matches)
+
+        status_org = os.path.join(self.translate, 'Status.org')
+
+        with open(status_org, 'w', encoding='utf-8') as f:
+            f.write("|  Locale  |  Lines  | % Done |\n")
+            f.write("|----------+---------+--------|\n")
+            f.write(f"| Template | {pot_message_count:7d} |      |")
+
+        g_logger.info("Done extracting messages")
+        g_logger.info("Merging messages")
+
+        po_dir = os.path.join(self.translate, 'po')
+        catalogs  = sorted(glob.glob(os.path.join(po_dir, '*.po')))
+
+        for cat in catalogs:
+            g_logger.info(f"Processing {cat}")
+
+            cat_locale = os.path.splitext(os.path.basename(cat))[0]
+
+            width_arg = []
+            with open(cat, 'r', encoding='utf-8') as f:
+                content = f.read()
+                if 'X-Generator:' not in content:
+                    width_arg = ['--width=400']
+
+            compendium_arg = []
+            compendium_dir = self.config.get('COMPENDIUM_DIR', '')
+            if compendium_dir:
+                compendium_path = os.path.join(compendium_dir, f'compendium-{cat_locale}.po')
+                if os.path.exists(compendium_path):
+                    g_logger.debug(f"compendiumPath={compendium_path}")
+                    compendium_arg = [f'--compendium={compendium_path}']
+
+            cat_new = f"{cat}.new"
+
+            with open(cat, 'rb') as f:
+                src_content = f.read()
+
+            with open(cat_new, 'wb') as f:
+                f.write(src_content)
+
+            with open(cat_new, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            content = re.sub(
+                r'"Content-Type: text/plain; charset=CHARSET\\n"',
+                r'"Content-Type: text/plain; charset=UTF-8\\n"',
+                content
+            )
+
+            with open(cat_new, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            msgmerge_cmd = [
+                'msgmerge',
+                *width_arg,
+                '--add-location=file',
+                '--no-fuzzy-matching',
+                *compendium_arg,
+                '-o', cat_new,
+                cat_new,
+                os.path.join(self.translate, 'template.pot')
+            ]
+
+            result = subprocess.run(msgmerge_cmd, stdout=sys.stdout, stderr=subprocess.DEVNULL)
+
+            if result.returncode != 0:
+                g_logger.error(f"msgmerge failed for {cat}")
+                continue
+
+            with open(cat_new, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            current_year = datetime.now().year
+
+            content = re.sub(
+                r'# SOME DESCRIPTIVE TITLE\.',
+                f'# Translation of {plasmoid_name} in {cat_locale}',
+                content
+            )
+
+            content = re.sub(
+                f'# Translation of {plasmoid_name} in LANGUAGE',
+                f'# Translation of {plasmoid_name} in {cat_locale}',
+                content
+            )
+
+            content = re.sub(
+                r"# Copyright \(C\) YEAR THE PACKAGE'S COPYRIGHT HOLDER",
+                f'# Copyright (C) {current_year}',
+                content
+            )
+
+            with open(cat_new, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            with open(cat_new, 'r', encoding='utf-8') as f:
+                cat_content = f.read()
+
+            po_empty_message_count = len(re.findall(r'msgstr ""\n(?:\n|$)', cat_content))
+            po_messages_done_count = pot_message_count - po_empty_message_count
+            po_completion = int(po_messages_done_count * 100 / pot_message_count) if pot_message_count > 0 else 0
+
+            with open(status_org, 'a', encoding='utf-8') as f:
+                f.write(f"\n| {cat_locale:8s} | {po_messages_done_count:3d}/{pot_message_count:<3d} | {po_completion:4d}% |\n")
+
+            os.rename(cat_new, cat)
+
+        g_logger.info("Done merging messages")
+        g_logger.info("Updating `translate/README.org`")
+
+        readme_path = os.path.join(self.translate, 'README.org')
+        with open(readme_path, 'r', encoding='utf-8') as f:
+            readme_lines = [line for line in f if not line.startswith('|')]
+
+        with open(status_org, 'r', encoding='utf-8') as f:
+            status_content = f.read()
+
+        with open(readme_path, 'w', encoding='utf-8') as f:
+            f.writelines(readme_lines)
+            f.write(status_content)
+
+        os.remove(status_org)
+
+        g_logger.info("Done")
+
+    def remove_directory_recursive(self, path):
+        if not os.path.exists(path):
+            g_logger.warning(f"Directory `{path}` does not exist.")
+            return
+
+        if not os.path.isdir(path):
+            g_logger.warning(f"`{path}` is not a directory.")
+            return
+
+        for entry in os.listdir(path):
+            entry_path = os.path.join(path, entry)
+
+            if os.path.isfile(entry_path) or os.path.islink(entry_path):
+                try:
+                    os.unlink(entry_path)
+                except OSError as e:
+                    g_logger.warning(f"Error removing file/link `{entry_path}`: {e}")
+            elif os.path.isdir(entry_path):
+                self.remove_directory_recursive(entry_path)
+
+        try:
+            os.rmdir(path)
+        except OSError as e:
+            g_logger.warning(f"Error removing directory `{path}`: {e}")
+
+    def clean(self):
+        g_logger.info("Cleaning build artifacts...")
+
+        build_artifact_paths = {
+            'files': [
+                os.path.join(self.translate, 'template.pot.new'),
+                os.path.join(self.translate, 'infiles.list')
+            ],
+            'dirs':  [os.path.join(self.contents, 'locale')],
+        }
+
+        warning_count = 0
+
+        for f in build_artifact_paths['files']:
+            try:
+                os.remove(f)
+            except Exception as e:
+                if type(e) != FileNotFoundError:
+                    g_logger.warning(f"Couldn't remove build artifact: `{f}`: {e}")
+                    warning_count += 1
+
+        for d in build_artifact_paths['dirs']:
+            try:
+                self.remove_directory_recursive(d)
+            except Exception as e:
+                if type(e) != FileNotFoundError:
+                    g_logger.warning(f"Couldn't remove build artifact: `{f}`: {e}")
+                    warning_count += 1
+
+        if warning_count == 0:
+            g_logger.info("Successfully cleaned build artifacts")
+        else:
+            g_logger.warning(f"Cleaned build artifacts with {warning_count} warning(s)")
+
+    def dispatch_subcommand(self):
+        if g_args.command == 'build':
+            self.build()
+
+        if g_args.command == 'merge':
+            self.merge()
+
+        if g_args.command == 'clean':
+            self.clean()
+
+
+Localez().dispatch_subcommand()

@@ -5,9 +5,8 @@ end_of_line = lf
 insert_final_newline = true
 
 [Makefile*]
-indent_style = space
-indent_size = 4
+indent_style = tab
 
-[*.{qml,json,xml}]
+[*.{qml,json,xml,py}]
 indent_style = space
 indent_size = 4

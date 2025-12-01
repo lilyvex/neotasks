@@ -1,0 +1,32 @@
+# Path to the root of the Git repository.
+#
+# If this field is not present or an empty string,
+# Localez will attempt to find this path via Git.
+#
+# It is recommended that you do NOT set this value
+# manually.
+#
+# This path, whether provided manually or found
+# automatically, will be treated as `/`.
+repositoryroot = ""
+
+# i18n settings for working with KDE Plasma Plasmoids
+#
+# If the `packageroot` field is an empty string or not
+# present, Localez will not treat this repository as a
+# Plasmoid.
+[plasmoid]
+# Path the the `package` directory containing the Plasmoid
+#
+# It is important that this directory also contains the
+# `metadata.json` file as it is used to provide package information
+# within the `template.pot` and `.po` files.
+#
+# Ensure that your `metadata.json` contains the required fields:
+# - Name
+# - Id
+# - Website
+# - BugReportUrl
+#
+# This will most likely be `package`, but can be changed if required
+packageroot = "package"
