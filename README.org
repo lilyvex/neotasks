@@ -7,10 +7,10 @@
 | [[./assets/icon_only_mode.png]] | [[./assets/icon_and_label_mode.png]] |
 
 #+HTML:</div>
-** Usage
+** 📃 Usage
 *To be written*
 
-** Building / Installing from Source
+** 🛠️ Building / Installing from Source
 Ensure you have =gettext= installed from your distribution's package manager and =gitpython= from =pip=, =uv=,
 or your distributions package manager. Then run:
 
@@ -18,11 +18,11 @@ or your distributions package manager. Then run:
 make build && make install
 #+end_src
 
-** Installing from a Release
+** 🔌 Installing from a Release
 *There are currently no releases.* This section will be updated when the first release
 is created.
 
-** Development Workflow
+** 💻 Development Workflow
 Follow [[#building--installing-from-source][Building / Installing from Source]]
 
 You can uninstall the Plasmoid via:
@@ -31,10 +31,10 @@ You can uninstall the Plasmoid via:
 make uninstall
 #+end_src
 
-** Internationalization / Translators (i18n)
+** ㊗️ Internationalization / Translators (i18n)
 See [[package/contents/translate/README.org]]
 
-** Contributing
+** 👥 Contributing
 Contributions are always welcome, regardless of skill level, but there are a few basic
 requirements to ensure that they get merged.
 
