@@ -1,5 +1,6 @@
 #+html:<div align="center">
-#+html:<img src="assets/banner.png" width="100%"/>
+#+html:<img src="assets/banner.svg" width="100%"/>
+#+html:<br/>
 
 | Icon-only mode              | Icon-and-label mode              |
 |-----------------------------+----------------------------------|
